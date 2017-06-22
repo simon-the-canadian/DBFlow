@@ -148,7 +148,7 @@ class SqliteStatementAccessCombiner(combiner: Combiner)
         combiner.apply {
             val fieldAccess: CodeBlock = getFieldAccessBlock(this@addCode, modelBlock,
                     defineProperty = defineProperty)
-            val wrapperMethod = SQLiteHelper[wrapperFieldTypeName ?: fieldTypeName].sqliteStatementWrapperMethod
+            val wrapperMethod = SQLiteHelper.getWrapperMethod(wrapperFieldTypeName ?: fieldTypeName)
             val statementMethod = SQLiteHelper[fieldTypeName].sqLiteStatementMethod
 
             var offset = "$index + $columnRepresentation"
@@ -238,12 +238,14 @@ class LoadFromCursorAccessCombiner(combiner: Combiner,
                 }
                 endControlFlow()
             } else {
-
+                var hasDefault = hasDefaultValue
                 var defaultValueBlock = defaultValue
                 if (!assignDefaultValuesFromCursor) {
                     defaultValueBlock = fieldLevelAccessor.get(modelBlock)
+                } else if (!hasDefault && fieldTypeName.isBoxedPrimitive) {
+                    hasDefault = true // force a null on it.
                 }
-                val cursorAccess = CodeBlock.of("cursor.\$LOrDefault(\$L${if (hasDefaultValue) ", $defaultValueBlock" else ""})",
+                val cursorAccess = CodeBlock.of("cursor.\$LOrDefault(\$L${if (hasDefault) ", $defaultValueBlock" else ""})",
                         SQLiteHelper.getMethod(wrapperFieldTypeName ?: fieldTypeName), indexName)
                 statement(fieldLevelAccessor.set(cursorAccess, modelBlock))
             }

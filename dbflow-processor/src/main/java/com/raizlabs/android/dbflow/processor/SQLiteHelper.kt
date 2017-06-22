@@ -83,6 +83,14 @@ enum class SQLiteHelper {
 
         fun containsType(typeName: TypeName?): Boolean = sTypeMap.containsKey(typeName)
 
+        fun getWrapperMethod(typeName: TypeName?): String {
+            var sqLiteHelper = get(typeName).sqliteStatementWrapperMethod
+            if (typeName == TypeName.FLOAT.box()) {
+                sqLiteHelper = "Float";
+            }
+            return sqLiteHelper;
+        }
+
         fun containsMethod(typeName: TypeName?): Boolean = sMethodMap.containsKey(typeName)
 
         fun getMethod(typeName: TypeName?): String = sMethodMap[typeName] ?: ""
